@@ -1,0 +1,4 @@
+github.com/elastic/go-elasticsearch/v7 v7.5.1-0.20200508111001-3c036aa259b3 h1:6BAqvX5QBR8ugGoNpsZMhHkUdHJEr9Hl36cQZiecX8Y=
+github.com/elastic/go-elasticsearch/v7 v7.5.1-0.20200508111001-3c036aa259b3/go.mod h1:OJ4wdbtDNk5g503kvlHLyErCgQwwzmDtaFC4XyOxXA4=
+github.com/ooyala/go-dogstatsd v0.0.0-20140922214459-23f2a1659b02 h1:BrldciqsqeGN914jnfV5kXfbpmV7MH/pm6eHTtBKYUw=
+github.com/ooyala/go-dogstatsd v0.0.0-20140922214459-23f2a1659b02/go.mod h1:nflAKKj0ZA/Ow+PKVITxVi3ZGXjdWWllHNZj4wdPPQg=
