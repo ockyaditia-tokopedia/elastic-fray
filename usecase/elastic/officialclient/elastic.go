@@ -2,6 +2,7 @@ package officialclient
 
 import (
 	"context"
+	"strconv"
 	"sync"
 	"time"
 
@@ -88,7 +89,6 @@ func (m Module) GetPromoOrderUsage(ctx context.Context, parameter elasticEntity.
 		URL:         m.config.ElasticSearch.URL,
 		Label:       "promo.order.usage",
 		Index:       elastic.ConstElasticSearchIndexPromoOrderUsage,
-		Type:        "",
 		Input:       req,
 		Environment: true,
 		Output:      &resp,
@@ -105,4 +105,98 @@ func (m Module) GetPromoOrderUsage(ctx context.Context, parameter elasticEntity.
 	}
 
 	return promos, nil
+}
+
+func (m Module) CountPromoOrderUsage(ctx context.Context, parameter elasticEntity.ElasticSearchParameter, o ...func(*esapi.SearchRequest)) (int, error) {
+	defer m.monitor.SetHistogram(time.Now(), "usecase.elastic.officialclient.count.promo.order.usage", nil)
+
+	req := elastic.Query{
+		Bool: &elastic.Bool{
+			Must: []elastic.Must{
+				elastic.Must{
+					QueryString: map[string]interface{}{
+						"query": parameter.QueryString,
+					},
+				},
+			},
+		},
+	}
+
+	if parameter.IsUsingTime {
+		req.Bool.Must = append(req.Bool.Must, elastic.Must{
+			Range: map[string]interface{}{
+				"create_time": map[string]interface{}{
+					"gte":       parameter.GTE.Format("2006-01-02"),
+					"lte":       parameter.LTE.Format("2006-01-02"),
+					"format":    "yyyy-MM-dd",
+					"time_zone": "+07:00",
+				},
+			},
+		})
+	}
+
+	total, err := m.usecase.elastic.ProcessCount(ctx, &elastic.SearchOption{
+		URL:         m.config.ElasticSearch.URL,
+		Label:       "promo.order.usage",
+		Index:       elastic.ConstElasticSearchIndexPromoOrderUsage,
+		Input:       req,
+		Environment: true,
+		PreferNode:  parameter.PreferNode,
+	})
+	if err != nil {
+		log.Error(err)
+	}
+
+	return total, err
+}
+
+func (m Module) InsertPromoOrderUsage(ctx context.Context, req marketplace.Promo) error {
+	defer m.monitor.SetHistogram(time.Now(), "usecase.elastic.officialclient.insert.promo.order.usage", nil)
+
+	err := m.usecase.elastic.ProcessInsert(ctx, &elastic.InsertOption{
+		URL:         m.config.ElasticSearch.URL,
+		Environment: true,
+		Index:       elastic.ConstElasticSearchIndexPromoOrderUsage,
+		Type:        "order",
+		ID:          strconv.FormatInt(req.OrderID, 10),
+		Data:        req,
+	})
+	if err != nil {
+		log.Error(err)
+	}
+
+	return err
+}
+
+func (m Module) UpdatePromoOrderUsage(ctx context.Context, req marketplace.Promo) error {
+	defer m.monitor.SetHistogram(time.Now(), "usecase.elastic.officialclient.update.promo.order.usage", nil)
+
+	err := m.usecase.elastic.ProcessUpdate(ctx, &elastic.InsertOption{
+		URL:         m.config.ElasticSearch.URL,
+		Environment: true,
+		Index:       elastic.ConstElasticSearchIndexPromoOrderUsage,
+		Type:        "order",
+		ID:          strconv.FormatInt(req.OrderID, 10),
+		Data:        req,
+	})
+	if err != nil {
+		log.Error(err)
+	}
+
+	return err
+}
+
+func (m Module) DeletePromoOrderUsage(ctx context.Context, id string) (string, error) {
+	defer m.monitor.SetHistogram(time.Now(), "usecase.elastic.officialclient.delete.promo.order.usage", nil)
+
+	resp, err := m.usecase.elastic.ProcessDelete(ctx, id, &elastic.DeleteOption{
+		URL:         m.config.ElasticSearch.URL,
+		Environment: true,
+		Index:       elastic.ConstElasticSearchIndexPromoOrderUsage,
+	})
+	if err != nil {
+		log.Error(err)
+	}
+
+	return resp, err
 }

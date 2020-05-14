@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"strconv"
 	"sync"
 	"time"
 
@@ -72,11 +73,10 @@ func (m Module) GetPromoOrderUsage(ctx context.Context, parameter elasticEntity.
 
 	if err := m.usecase.elastic.Search(ctx, &elastic.SearchOption{
 		URL:         m.config.ElasticSearch.URL,
+		Environment: true,
 		Label:       "promo.order.usage",
 		Index:       elastic.ConstElasticSearchIndexPromoOrderUsage,
-		Type:        "",
 		Input:       req,
-		Environment: true,
 		Output:      &resp,
 		Size:        parameter.Size,
 		Sort:        parameter.Sort,
@@ -91,4 +91,95 @@ func (m Module) GetPromoOrderUsage(ctx context.Context, parameter elasticEntity.
 	}
 
 	return promos, nil
+}
+
+func (m Module) CountPromoOrderUsage(ctx context.Context, query string) (int, error) {
+	defer m.monitor.SetHistogram(time.Now(), "usecase.elastic.api.count.promo.order.usage", nil)
+
+	total, err := m.usecase.elastic.Count(ctx, &elastic.SearchOption{
+		URL:         m.config.ElasticSearch.URL,
+		Environment: true,
+		Label:       "promo.order.usage",
+		Index:       elastic.ConstElasticSearchIndexPromoOrderUsage,
+		Input: elastic.Query{
+			QueryString: map[string]interface{}{
+				"query": query,
+			},
+		},
+		PreferNode: elastic.ConstPreferNodeTypeDefault,
+	})
+	if err != nil {
+		log.Error(err)
+	}
+
+	return total, err
+}
+
+func (m Module) InsertPromoOrderUsage(ctx context.Context, req marketplace.Promo) error {
+	defer m.monitor.SetHistogram(time.Now(), "usecase.elastic.api.insert.promo.order.usage", nil)
+
+	err := m.usecase.elastic.Insert(ctx, &elastic.InsertOption{
+		URL:         m.config.ElasticSearch.URL,
+		Environment: true,
+		Index:       elastic.ConstElasticSearchIndexPromoOrderUsage,
+		Type:        "order",
+		ID:          strconv.FormatInt(req.OrderID, 10),
+		Data:        req,
+	})
+	if err != nil {
+		log.Error(err)
+	}
+
+	return err
+}
+
+func (m Module) UpdatePromoOrderUsage(ctx context.Context, req marketplace.Promo) error {
+	defer m.monitor.SetHistogram(time.Now(), "usecase.elastic.api.update.promo.order.usage", nil)
+
+	err := m.usecase.elastic.Update(ctx, &elastic.InsertOption{
+		URL:         m.config.ElasticSearch.URL,
+		Environment: true,
+		Index:       elastic.ConstElasticSearchIndexPromoOrderUsage,
+		Type:        "order",
+		ID:          strconv.FormatInt(req.OrderID, 10),
+		Data:        req,
+	})
+	if err != nil {
+		log.Error(err)
+	}
+
+	return err
+}
+
+func (m Module) DeletePromoOrderUsage(ctx context.Context, query string) (int, error) {
+	defer m.monitor.SetHistogram(time.Now(), "usecase.elastic.api.delete.promo.order.usage", nil)
+
+	resp, err := m.usecase.elastic.Delete(ctx, &elastic.DeleteOption{
+		URL:         m.config.ElasticSearch.URL,
+		Environment: true,
+		Index:       elastic.ConstElasticSearchIndexPromoOrderUsage,
+		Type:        "order",
+		Query: elastic.Query{
+			Bool: &elastic.Bool{
+				Should: []elastic.Should{
+					{
+						Bool: &elastic.Bool{
+							Must: []elastic.Must{
+								{
+									QueryString: map[string]interface{}{
+										"query": query,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	})
+	if err != nil {
+		log.Error(err)
+	}
+
+	return resp.Deleted, err
 }
