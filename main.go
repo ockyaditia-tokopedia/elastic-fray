@@ -8,6 +8,7 @@ import (
 	"github.com/ooyala/go-dogstatsd"
 
 	"github.com/elastic-fray/entity/elastic"
+	"github.com/elastic-fray/entity/promo/marketplace"
 	"github.com/elastic-fray/pkg/monitor"
 	"github.com/elastic-fray/pkg/utils"
 	"github.com/elastic-fray/usecase/elastic/api"
@@ -66,11 +67,15 @@ func init() {
 }
 
 func main() {
+	// currentTime := time.Now()
+
+	// for i := currentTime.Hour(); i < 13; {
 	// Elastic API
 	processElasticAPI()
 
 	// Elastic Official Client
 	processElasticOfficialClient()
+	// }
 }
 
 func processElasticAPI() {
@@ -83,7 +88,7 @@ func processElasticAPI() {
 		Monitor:  Monitor,
 	})
 
-	resp, err := elasticAPI.GetPromoOrderUsage(Context, elastic.ElasticSearchParameter{
+	searchResp, err := elasticAPI.GetPromoOrderUsage(Context, elastic.ElasticSearchParameter{
 		QueryString: "source:marketplace",
 		Source:      "api.benchmark",
 	})
@@ -91,7 +96,35 @@ func processElasticAPI() {
 		log.Error(err)
 	}
 
-	fmt.Println("Total Result: ", len(resp))
+	fmt.Println("API Search - Total Result: ", len(searchResp))
+
+	countResp, err := elasticAPI.CountPromoOrderUsage(Context, "source:marketplace")
+	if err != nil {
+		log.Error(err)
+	}
+
+	fmt.Println("API Count - Total Result: ", countResp)
+
+	if err = elasticAPI.InsertPromoOrderUsage(Context, marketplace.Promo{
+		OrderID: 69696969,
+	}); err != nil {
+		log.Error(err)
+	}
+
+	if err = elasticAPI.UpdatePromoOrderUsage(Context, marketplace.Promo{
+		OrderID: 69696969,
+	}); err != nil {
+		log.Error(err)
+	}
+
+	time.Sleep(1000000000) // 1s, let give it time
+
+	deleteResp, err := elasticAPI.DeletePromoOrderUsage(Context, "order_id:69696969")
+	if err != nil {
+		log.Error(err)
+	}
+
+	fmt.Println("API Delete - Status: ", deleteResp)
 }
 
 func processElasticOfficialClient() {
@@ -105,7 +138,7 @@ func processElasticOfficialClient() {
 		log.Fatal(err)
 	}
 
-	resp, err := elasticOfficial.GetPromoOrderUsage(Context, elastic.ElasticSearchParameter{
+	searchResp, err := elasticOfficial.GetPromoOrderUsage(Context, elastic.ElasticSearchParameter{
 		QueryString: "source:marketplace",
 		Source:      "officialclient.benchmark",
 	})
@@ -113,5 +146,36 @@ func processElasticOfficialClient() {
 		log.Error(err)
 	}
 
-	fmt.Println("Total Result: ", len(resp))
+	fmt.Println("Official Client Search - Total Result: ", len(searchResp))
+
+	countResp, err := elasticOfficial.CountPromoOrderUsage(Context, elastic.ElasticSearchParameter{
+		QueryString: "source:marketplace",
+		Source:      "officialclient.benchmark",
+	})
+	if err != nil {
+		log.Error(err)
+	}
+
+	fmt.Println("Official Client Count - Total Result: ", countResp)
+
+	if err = elasticOfficial.InsertPromoOrderUsage(Context, marketplace.Promo{
+		OrderID: 96969696,
+	}); err != nil {
+		log.Error(err)
+	}
+
+	if err = elasticOfficial.UpdatePromoOrderUsage(Context, marketplace.Promo{
+		OrderID: 96969696,
+	}); err != nil {
+		log.Error(err)
+	}
+
+	time.Sleep(1000000000) // 1s, let give it time
+
+	deleteResp, err := elasticOfficial.DeletePromoOrderUsage(Context, "96969696")
+	if err != nil {
+		log.Error(err)
+	}
+
+	fmt.Println("Official Client Delete - Status:", deleteResp)
 }
