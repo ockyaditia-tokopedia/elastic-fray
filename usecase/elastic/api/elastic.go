@@ -183,3 +183,14 @@ func (m Module) DeletePromoOrderUsage(ctx context.Context, query string) (int, e
 
 	return resp.Deleted, err
 }
+
+func (m Module) BulkPromoOrderUsage(ctx context.Context, url, input string) (bool, error) {
+	defer m.monitor.SetHistogram(time.Now(), "usecase.elastic.api.bulk.promo.order.usage", nil)
+
+	resp, err := m.usecase.elastic.Bulk(ctx, url, input)
+	if err != nil {
+		log.Error(err)
+	}
+
+	return resp, err
+}

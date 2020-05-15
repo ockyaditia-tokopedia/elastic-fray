@@ -2,6 +2,7 @@ package officialclient
 
 import (
 	"context"
+	"io"
 	"strconv"
 	"sync"
 	"time"
@@ -199,4 +200,15 @@ func (m Module) DeletePromoOrderUsage(ctx context.Context, id string) (string, e
 	}
 
 	return resp, err
+}
+
+func (m Module) BulkPromoOrderUsage(ctx context.Context, body io.Reader) error {
+	defer m.monitor.SetHistogram(time.Now(), "usecase.elastic.officialclient.bulk.promo.order.usage", nil)
+
+	err := m.usecase.elastic.ProcessBulk(ctx, body)
+	if err != nil {
+		log.Error(err)
+	}
+
+	return err
 }

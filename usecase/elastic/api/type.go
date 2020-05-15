@@ -21,6 +21,7 @@ type (
 		InsertPromoOrderUsage(ctx context.Context, req marketplace.Promo) error
 		UpdatePromoOrderUsage(ctx context.Context, req marketplace.Promo) error
 		DeletePromoOrderUsage(ctx context.Context, query string) (int, error)
+		BulkPromoOrderUsage(ctx context.Context, url, input string) (bool, error)
 	}
 
 	ElasticMethod interface { // TODO: should using own param, avoid external param
@@ -29,6 +30,7 @@ type (
 		Insert(ctx context.Context, io *elastic.InsertOption) error
 		Update(ctx context.Context, io *elastic.InsertOption) error
 		Delete(ctx context.Context, do *elastic.DeleteOption) (elastic.ElasticSearchDeleteResponse, error)
+		Bulk(ctx context.Context, url, input string) (bool, error)
 	}
 )
 

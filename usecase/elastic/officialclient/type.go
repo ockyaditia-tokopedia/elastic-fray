@@ -2,6 +2,7 @@ package officialclient
 
 import (
 	"context"
+	"io"
 
 	"github.com/elastic/go-elasticsearch/v7/esapi"
 
@@ -21,6 +22,7 @@ type (
 		InsertPromoOrderUsage(ctx context.Context, req marketplace.Promo) error
 		UpdatePromoOrderUsage(ctx context.Context, req marketplace.Promo) error
 		DeletePromoOrderUsage(ctx context.Context, id string) (string, error)
+		BulkPromoOrderUsage(ctx context.Context, body io.Reader) error
 	}
 
 	ElasticMethod interface { // TODO: should using own param, avoid external param
@@ -30,6 +32,7 @@ type (
 		ProcessInsert(ctx context.Context, so *elastic.InsertOption) error
 		ProcessUpdate(ctx context.Context, so *elastic.InsertOption) error
 		ProcessDelete(ctx context.Context, id string, so *elastic.DeleteOption, o ...func(*esapi.DeleteRequest)) (string, error)
+		ProcessBulk(ctx context.Context, body io.Reader, o ...func(*esapi.BulkRequest)) error
 	}
 )
 
