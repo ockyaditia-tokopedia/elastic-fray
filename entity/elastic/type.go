@@ -41,4 +41,18 @@ type (
 			} `json:"hits"`
 		} `json:"hits"`
 	}
+
+	BulkInsert struct {
+		Index string `json:"_index"`
+		Type  string `json:"_type"`
+		ID    string `json:"_id"`
+	}
+
+	IndexBulkInsert struct {
+		Index BulkInsert `json:"index"`
+	}
+
+	PromoOrderUsageBulkInsert struct {
+		Doc marketplace.Promo `json:"doc"`
+	}
 )

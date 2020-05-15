@@ -1,8 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/ooyala/go-dogstatsd"
@@ -69,7 +72,7 @@ func init() {
 func main() {
 	// currentTime := time.Now()
 
-	// for i := currentTime.Hour(); i < 13; {
+	// for i := currentTime.Hour(); i < 23; {
 	// Elastic API
 	processElasticAPI()
 
@@ -125,6 +128,44 @@ func processElasticAPI() {
 	}
 
 	fmt.Println("API Delete - Status: ", deleteResp)
+
+	// TODO: move to usecase
+	var buffer bytes.Buffer
+
+	index, _ := json.Marshal(elastic.IndexBulkInsert{
+		Index: elastic.BulkInsert{
+			Index: "staging-promo-order-usage",
+			Type:  "order",
+			ID:    "66666666",
+		},
+	})
+	data, _ := json.Marshal(elastic.PromoOrderUsageBulkInsert{
+		Doc: marketplace.Promo{
+			OrderID: 66666666,
+		},
+	})
+	buffer.WriteString(fmt.Sprintf("%s\n%s\n", index, data))
+
+	index, _ = json.Marshal(elastic.IndexBulkInsert{
+		Index: elastic.BulkInsert{
+			Index: "staging-promo-order-usage",
+			Type:  "order",
+			ID:    "99999999",
+		},
+	})
+	data, _ = json.Marshal(elastic.PromoOrderUsageBulkInsert{
+		Doc: marketplace.Promo{
+			OrderID: 99999999,
+		},
+	})
+	buffer.WriteString(fmt.Sprintf("%s\n%s\n", index, data))
+
+	bulkResp, err := elasticAPI.BulkPromoOrderUsage(Context, Config.ElasticSearch.URL, buffer.String())
+	if err != nil {
+		log.Error(err)
+	}
+
+	fmt.Println("API Bulk - Status: ", bulkResp)
 }
 
 func processElasticOfficialClient() {
@@ -178,4 +219,40 @@ func processElasticOfficialClient() {
 	}
 
 	fmt.Println("Official Client Delete - Status:", deleteResp)
+
+	// TODO: move to usecase
+	var buffer bytes.Buffer
+
+	index, _ := json.Marshal(elastic.IndexBulkInsert{
+		Index: elastic.BulkInsert{
+			Index: "staging-promo-order-usage",
+			Type:  "order",
+			ID:    "66666666",
+		},
+	})
+	data, _ := json.Marshal(elastic.PromoOrderUsageBulkInsert{
+		Doc: marketplace.Promo{
+			OrderID: 66666666,
+		},
+	})
+	buffer.WriteString(fmt.Sprintf("%s\n%s\n", index, data))
+
+	index, _ = json.Marshal(elastic.IndexBulkInsert{
+		Index: elastic.BulkInsert{
+			Index: "staging-promo-order-usage",
+			Type:  "order",
+			ID:    "99999999",
+		},
+	})
+	data, _ = json.Marshal(elastic.PromoOrderUsageBulkInsert{
+		Doc: marketplace.Promo{
+			OrderID: 99999999,
+		},
+	})
+	buffer.WriteString(fmt.Sprintf("%s\n%s\n", index, data))
+
+	err = elasticOfficial.BulkPromoOrderUsage(Context, strings.NewReader(buffer.String()))
+	if err != nil {
+		log.Error(err)
+	}
 }
