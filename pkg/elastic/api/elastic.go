@@ -2,11 +2,13 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"sync"
 
 	"github.com/tokopedia/tdk/go/log"
 
 	"github.com/tokopedia/sauron/src/elastic"
+	"github.com/tokopedia/sauron/src/httpclient"
 	"github.com/tokopedia/sauron/src/utils"
 )
 
@@ -57,4 +59,34 @@ func (m Module) Update(ctx context.Context, io *elastic.InsertOption) error {
 
 func (m Module) Delete(ctx context.Context, do *elastic.DeleteOption) (elastic.ElasticSearchDeleteResponse, error) {
 	return m.elastic.Delete(do)
+}
+
+func (m Module) Bulk(ctx context.Context, url, input string) (bool, error) {
+	type response struct {
+		Created bool `json:"created"`
+	}
+
+	var resp response
+
+	agent := httpclient.NewHTTPRequest()
+	agent.Url = url
+	agent.Path = "/_bulk"
+	agent.Method = "POST"
+	agent.IsJson = true
+	agent.Json = input
+
+	body, err := agent.DoReq()
+	if err != nil {
+		log.Error(err)
+		agent.Debug()
+		return resp.Created, err
+	}
+
+	if err := json.Unmarshal(*body, &resp); err != nil {
+		log.Error(err)
+		return resp.Created, err
+	}
+
+	agent.Debug()
+	return resp.Created, err
 }

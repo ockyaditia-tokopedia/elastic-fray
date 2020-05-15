@@ -18,6 +18,7 @@ type (
 		Insert(ctx context.Context, io *elastic.InsertOption) error
 		Update(ctx context.Context, io *elastic.InsertOption) error
 		Delete(ctx context.Context, do *elastic.DeleteOption) (elastic.ElasticSearchDeleteResponse, error)
+		Bulk(ctx context.Context, url, input string) (bool, error)
 	}
 
 	ElasticMethod interface {

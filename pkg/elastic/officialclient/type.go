@@ -2,6 +2,7 @@ package officialclient
 
 import (
 	"context"
+	"io"
 
 	"github.com/elastic/go-elasticsearch/v7"
 	"github.com/elastic/go-elasticsearch/v7/esapi"
@@ -19,6 +20,7 @@ type (
 		ProcessInsert(ctx context.Context, so *elastic.InsertOption) error
 		ProcessUpdate(ctx context.Context, so *elastic.InsertOption) error
 		ProcessDelete(ctx context.Context, id string, so *elastic.DeleteOption, o ...func(*esapi.DeleteRequest)) (string, error)
+		ProcessBulk(ctx context.Context, body io.Reader, o ...func(*esapi.BulkRequest)) error
 	}
 )
 

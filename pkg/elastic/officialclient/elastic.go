@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
 	"strings"
 	"sync"
 
@@ -315,4 +316,17 @@ func (m Module) ProcessDelete(ctx context.Context, id string, so *elastic.Delete
 	}
 
 	return result["result"].(string), err
+}
+
+func (m Module) ProcessBulk(ctx context.Context, body io.Reader, o ...func(*esapi.BulkRequest)) error {
+	resp, err := m.elastic.Bulk(
+		body,
+	)
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+	defer resp.Body.Close()
+
+	return err
 }
